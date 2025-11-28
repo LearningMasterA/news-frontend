@@ -1,66 +1,59 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import Hero from "@/components/Hero";
+import Section from "@/components/Section";
+import BreakingNews from "@/components/BreakingNews";
 
-export default function Home() {
+async function getNews(query) {
+  const apiKey = process.env.GNEWS_API_KEY;
+
+
+  try {
+    const res = await fetch(
+      `https://gnews.io/api/v4/search?q=${query}&lang=en&max=10&apikey=${apiKey}`,
+      { cache: "no-store" }
+    );
+
+    const json = await res.json();
+    console.log("GNEWS RESPONSE FOR:", query, json);
+
+    return json.articles || [];
+  } catch (error) {
+    console.log("API ERROR:", error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  // Fetch each section separately
+  const topNews = await getNews("India");
+  const sportsNews = await getNews("sports");
+  const techNews = await getNews("technology");
+  const entertainmentNews = await getNews("bollywood");
+  const businessNews = await getNews("business");
+//    console.log("TopNews length in render:", topNews.length);
+// console.log("Sports length in render:", sportsNews.length);
+// console.log("Tech length in render:", techNews.length);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <Navbar />
+      <BreakingNews headlines={topNews.slice(0, 5).map(a => a.title)} />
+      <div className="container py-4">
+      {topNews.length > 0 && (
+        <Hero 
+        main={topNews[0]}
+        side={topNews.slice(1,4)} 
         />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+
+      {/* <Section title="Top News" articles={topNews} /> */}
+      <Section title="Sports" articles={sportsNews} />
+      <Section title="Technology" articles={techNews} />
+      <Section title="Entertainment" articles={entertainmentNews} />
+      <Section title="Business" articles={businessNews} />
+      </div>
+      <Footer />
+    </>
   );
 }
